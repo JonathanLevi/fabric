@@ -437,7 +437,7 @@ func (s *ServerOpenchainREST) GetEnrollmentCert(rw web.ResponseWriter, req *web.
 
 		rw.WriteHeader(http.StatusOK)
 		fmt.Fprintf(rw, "{\"OK\": \"%s\"}", urlEncodedCert)
-		restLogger.Debug("Sucessfully retrieved enrollment certificate for secure context '%s'", enrollmentID)
+		restLogger.Debug("Successfully retrieved enrollment certificate for secure context '%s'", enrollmentID)
 	} else {
 		// Security must be enabled to request enrollment certificates
 		rw.WriteHeader(http.StatusBadRequest)
@@ -489,92 +489,7 @@ func (s *ServerOpenchainREST) GetTransactionCert(rw web.ResponseWriter, req *web
 	}
 
 	// If security is enabled, initialize the crypto client
-	if core.SecurityEnabled() {
-		if restLogger.IsEnabledFor(logging.DEBUG) {
-			restLogger.Debug("Initializing secure client using context '%s'", enrollmentID)
-		}
-
-		// Initialize the security client
-		sec, err := crypto.InitClient(enrollmentID, nil)
-		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
-			restLogger.Error(fmt.Sprintf("{\"Error\": \"%s\"}", err))
-
-			return
-		}
-
-		// Obtain the client CertificateHandler
-		handler, err := sec.GetTCertificateHandlerNext()
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
-			restLogger.Error(fmt.Sprintf("{\"Error\": \"%s\"}", err))
-
-			return
-		}
-
-		// Certificate handler can not be hil
-		if handler == nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(rw, "{\"Error\": \"Error retrieving certificate handler.\"}")
-			restLogger.Error("{\"Error\": \"Error retrieving certificate handler.\"}")
-
-			return
-		}
-
-		// Retrieve the required number of TCerts
-		tcertArray := make([]string, count)
-		var i uint32
-		for i = 0; i < count; i++ {
-			// Obtain the DER encoded certificate
-			certDER := handler.GetCertificate()
-
-			// Confirm the retrieved enrollment certificate is not nil
-			if certDER == nil {
-				rw.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(rw, "{\"Error\": \"Transaction certificate is nil.\"}")
-				restLogger.Error("{\"Error\": \"Transaction certificate is nil.\"}")
-
-				return
-			}
-
-			// Confirm the retrieved enrollment certificate has non-zero length
-			if len(certDER) == 0 {
-				rw.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(rw, "{\"Error\": \"Transaction certificate length is 0.\"}")
-				restLogger.Error("{\"Error\": \"Transaction certificate length is 0.\"}")
-
-				return
-			}
-
-			// Transforms the DER encoded certificate to a PEM encoded certificate
-			certPEM := utils.DERCertToPEM(certDER)
-
-			// As the transaction certificate contains \n characters, url encode it before outputting
-			urlEncodedCert := url.QueryEscape(string(certPEM))
-
-			// Add the urlEncodedCert transaction certificate to the certificate array
-			tcertArray[i] = urlEncodedCert
-		}
-
-		// Close the security client
-		crypto.CloseClient(sec)
-
-		// Construct a JSON formatted response
-		jsonResponse, err := json.Marshal(tcertArray)
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
-			restLogger.Error(fmt.Sprintf("{\"Error marshalling TCert array\": \"%s\"}", err))
-
-			return
-		}
-
-		rw.WriteHeader(http.StatusOK)
-		fmt.Fprintf(rw, "{\"OK\": %s}", string(jsonResponse))
-		restLogger.Debug("Sucessfully retrieved transaction certificates for secure context '%s'", enrollmentID)
-	} else {
+	if !core.SecurityEnabled() {
 		// Security must be enabled to request transaction certificates
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(rw, "{\"Error\": \"Security functionality must be enabled before requesting client certificates.\"}")
@@ -582,6 +497,91 @@ func (s *ServerOpenchainREST) GetTransactionCert(rw web.ResponseWriter, req *web
 
 		return
 	}
+
+	if restLogger.IsEnabledFor(logging.DEBUG) {
+		restLogger.Debug("Initializing secure client using context '%s'", enrollmentID)
+	}
+
+	// Initialize the security client
+	sec, err := crypto.InitClient(enrollmentID, nil)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
+		restLogger.Error(fmt.Sprintf("{\"Error\": \"%s\"}", err))
+
+		return
+	}
+
+	// Obtain the client CertificateHandler
+	handler, err := sec.GetTCertificateHandlerNext()
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
+		restLogger.Error(fmt.Sprintf("{\"Error\": \"%s\"}", err))
+
+		return
+	}
+
+	// Certificate handler can not be hil
+	if handler == nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(rw, "{\"Error\": \"Error retrieving certificate handler.\"}")
+		restLogger.Error("{\"Error\": \"Error retrieving certificate handler.\"}")
+
+		return
+	}
+
+	// Retrieve the required number of TCerts
+	tcertArray := make([]string, count)
+	var i uint32
+	for i = 0; i < count; i++ {
+		// Obtain the DER encoded certificate
+		certDER := handler.GetCertificate()
+
+		// Confirm the retrieved enrollment certificate is not nil
+		if certDER == nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(rw, "{\"Error\": \"Transaction certificate is nil.\"}")
+			restLogger.Error("{\"Error\": \"Transaction certificate is nil.\"}")
+
+			return
+		}
+
+		// Confirm the retrieved enrollment certificate has non-zero length
+		if len(certDER) == 0 {
+			rw.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(rw, "{\"Error\": \"Transaction certificate length is 0.\"}")
+			restLogger.Error("{\"Error\": \"Transaction certificate length is 0.\"}")
+
+			return
+		}
+
+		// Transforms the DER encoded certificate to a PEM encoded certificate
+		certPEM := utils.DERCertToPEM(certDER)
+
+		// As the transaction certificate contains \n characters, url encode it before outputting
+		urlEncodedCert := url.QueryEscape(string(certPEM))
+
+		// Add the urlEncodedCert transaction certificate to the certificate array
+		tcertArray[i] = urlEncodedCert
+	}
+
+	// Close the security client
+	crypto.CloseClient(sec)
+
+	// Construct a JSON formatted response
+	jsonResponse, err := json.Marshal(tcertArray)
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
+		restLogger.Error(fmt.Sprintf("{\"Error marshalling TCert array\": \"%s\"}", err))
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintf(rw, "{\"OK\": %s}", string(jsonResponse))
+	restLogger.Debug("Successfully retrieved transaction certificates for secure context '%s'", enrollmentID)
 }
 
 // GetBlockchainInfo returns information about the blockchain ledger such as
