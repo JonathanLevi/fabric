@@ -512,29 +512,29 @@ func (s *ServerOpenchainREST) GetTransactionCert(rw web.ResponseWriter, req *web
 		return
 	}
 
-	// Obtain the client CertificateHandler
-	handler, err := sec.GetTCertificateHandlerNext()
-	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
-		restLogger.Error(fmt.Sprintf("{\"Error\": \"%s\"}", err))
-
-		return
-	}
-
-	// Certificate handler can not be hil
-	if handler == nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(rw, "{\"Error\": \"Error retrieving certificate handler.\"}")
-		restLogger.Error("{\"Error\": \"Error retrieving certificate handler.\"}")
-
-		return
-	}
-
 	// Retrieve the required number of TCerts
 	tcertArray := make([]string, count)
-	var i uint32
-	for i = 0; i < count; i++ {
+	for i := uint32(0); i < count; i++ {
+
+		// Obtain the client CertificateHandler
+		handler, err := sec.GetTCertificateHandlerNext()
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(rw, "{\"Error\": \"%s\"}", err)
+			restLogger.Error(fmt.Sprintf("{\"Error\": \"%s\"}", err))
+
+			return
+		}
+
+		// Certificate handler can not be hil
+		if handler == nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(rw, "{\"Error\": \"Error retrieving certificate handler.\"}")
+			restLogger.Error("{\"Error\": \"Error retrieving certificate handler.\"}")
+
+			return
+		}
+
 		// Obtain the DER encoded certificate
 		certDER := handler.GetCertificate()
 
