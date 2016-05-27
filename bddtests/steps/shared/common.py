@@ -20,6 +20,7 @@ import time
 import copy
 import subprocess
 from datetime import datetime, timedelta
+from bdd_test_util import cli_call
 
 import sys, requests, json
 
