@@ -63,8 +63,8 @@ def parseComposeOutput(context):
     # Now get the Network Address for each name, and set the ContainerData onto the context.
     containerDataList = []
     for containerName in containerNames:
-    	output, error, returncode = \
-        	bdd_test_util.cli_call(context, ["docker", "inspect", "--format",  "{{ .NetworkSettings.IPAddress }}", containerName], expect_success=True)
+        output, error, returncode = \
+            bdd_test_util.cli_call(context, ["docker", "inspect", "--format",  "{{ .NetworkSettings.IPAddress }}", containerName], expect_success=True)
         #print("container {0} has address = {1}".format(containerName, output.splitlines()[0]))
         ipAddress = output.splitlines()[0]
 
@@ -92,15 +92,15 @@ def parseComposeOutput(context):
     print("")
 
 def ipFromContainerNamePart(namePart, containerDataList):
-	"""Returns the IPAddress based upon a name part of the full container name"""
-	ip = None
-	containerNamePrefix = os.path.basename(os.getcwd()) + "_"
-	for containerData in containerDataList:
-	    if containerData.containerName.startswith(containerNamePrefix + namePart):
-	    	ip = containerData.ipAddress
-	if ip == None:
-		raise Exception("Could not find container with namePart = {0}".format(namePart))
-	return ip
+    """Returns the IPAddress based upon a name part of the full container name"""
+    ip = None
+    containerNamePrefix = os.path.basename(os.getcwd()) + "_"
+    for containerData in containerDataList:
+        if containerData.containerName.startswith(containerNamePrefix + namePart):
+            ip = containerData.ipAddress
+    if ip == None:
+        raise Exception("Could not find container with namePart = {0}".format(namePart))
+    return ip
 
 def buildUrl(context, ipAddress, path):
     schema = "http"
@@ -120,7 +120,7 @@ def getDockerComposeFileArgsFromYamlFile(compose_yaml):
 
 @given(u'we compose "{composeYamlFile}"')
 def step_impl(context, composeYamlFile):
-	# Use the uninstalled version of `cf active-deploy` rather than the installed version on the OS $PATH
+    # Use the uninstalled version of `cf active-deploy` rather than the installed version on the OS $PATH
     #cmd = os.path.dirname(os.path.abspath(__file__)) + "/../../../cf_update/v1/cf_update.py"
 
     # Expand $vars, e.g. "--path $PATH" becomes "--path /bin"
@@ -176,8 +176,8 @@ def step_impl(context, chaincodePath, ctor, containerName):
     print("Requesting path = {0}".format(request_url))
     args = []
     if 'table' in context:
-	   # There is ctor arguments
-	   args = context.table[0].cells
+       # There is ctor arguments
+       args = context.table[0].cells
     typeGolang = 1
 
     # Create a ChaincodeSpec structure
