@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 
 import sys, requests, json
 
-import bdd_test_util
+from shared import bdd_test_util
 
 CORE_REST_PORT = 5000
 
