@@ -15,12 +15,11 @@
 #
 
 import os
-import re
 import time
 import copy
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-import sys, requests, json
+import requests, json
 
 from shared import bdd_test_util
 

@@ -24,7 +24,7 @@
 #  @chaincodeImagesUpToDate use this if all scenarios chaincode images are up to date, and do NOT require building.  BE SURE!!!
 
 #@chaincodeImagesUpToDate
-Feature: lanching 3 peers
+Feature: launching 3 peers
     As a HyperLedger developer
     I want to be able to launch 3 peers
 
