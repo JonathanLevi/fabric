@@ -32,10 +32,15 @@ It has these top-level messages:
 	RangeQueryStateKeyValue
 	RangeQueryStateResponse
 	Secret
+	SigmaInput
+	ExecuteWithBinding
+	SigmaOutput
 	BuildResult
+	TransactionRequest
 	ChaincodeReg
 	Interest
 	Register
+	Rejection
 	Event
 	Transaction
 	TransactionBlock

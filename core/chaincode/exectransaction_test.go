@@ -57,6 +57,7 @@ func initMemSrvc() (net.Listener, error) {
 	finitMemSrvc(nil)
 
 	ca.LogInit(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr, os.Stdout)
+	ca.CacheConfiguration() // Cache configuration
 
 	aca := ca.NewACA()
 	eca := ca.NewECA()
@@ -463,9 +464,15 @@ func invokeExample02Transaction(ctxt context.Context, cID *pb.ChaincodeID, args 
 	return nil
 }
 
-// Test the invocation of a transaction.
 func TestExecuteInvokeTransaction(t *testing.T) {
 	var opts []grpc.ServerOption
+
+	//TLS is on by default. This is the ONLY test that does NOT use TLS
+	viper.Set("peer.tls.enabled", false)
+
+	//turn OFF keepalive. All other tests use keepalive
+	viper.Set("peer.chaincode.keepalive", "0")
+
 	if viper.GetBool("peer.tls.enabled") {
 		creds, err := credentials.NewServerTLSFromFile(viper.GetString("peer.tls.cert.file"), viper.GetString("peer.tls.key.file"))
 		if err != nil {

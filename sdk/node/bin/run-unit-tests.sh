@@ -1,11 +1,14 @@
 #
 # Run the unit tests associated with the node.js client sdk
 #
+
+# Variable to store error results
+NODE_ERR_CODE=0
+
 main() {
    # Initialization
    init
 
-   {
    # Start member services
    startMemberServices
 
@@ -20,8 +23,6 @@ main() {
    # Stop peer and member services
    stopPeer
    stopMemberServices
-
-   } 2>&1 | tee $LOGDIR/log
 }
 
 # initialization & cleanup
@@ -52,6 +53,9 @@ init() {
    export CORE_SECURITY_ENABLED=true
    export CORE_SECURITY_PRIVACY=true
 
+   # Run the membersrvc with the Attribute Certificate Authority enabled
+   export MEMBERSRVC_CA_ACA_ENABLED=true
+
    # Clean up if anything remaining from previous run
    stopMemberServices
    stopPeer
@@ -69,7 +73,7 @@ runTests() {
    runRegistrarTests
    runChainTests
    runAssetMgmtTests
-   #runAssetMgmtWithRolesTests
+   runAssetMgmtWithRolesTests
    echo "End running tests in network mode"
 }
 
@@ -114,8 +118,9 @@ postExample() {
 # $1 is name of example to prepare on disk
 prepareExampleForDeployInNetworkMode() {
    SRCDIR=$EXAMPLES/$1
-   if [ ! -d $SRC_DIR ]; then
+   if [ ! -d $SRCDIR ]; then
       echo "FATAL ERROR: directory does not exist: $SRCDIR"
+      NODE_ERR_CODE=1
       exit 1;
    fi
    DSTDIR=$GOPATH/src/github.com/$1
@@ -138,8 +143,9 @@ prepareExampleForDeployInNetworkMode() {
 # $1 is the name of the sample to start
 startExampleInDevMode() {
    SRCDIR=$EXAMPLES/$1
-   if [ ! -d $SRC_DIR ]; then
+   if [ ! -d $SRCDIR ]; then
       echo "FATAL ERROR: directory does not exist: $SRCDIR"
+      NODE_ERR_CODE=1
       exit 1;
    fi
    EXE=$SRCDIR/$1
@@ -160,6 +166,10 @@ stopExampleInDevMode() {
 runRegistrarTests() {
    echo "BEGIN running registrar tests ..."
    node $UNITTEST/registrar.js
+   if [ $? -ne 0 ]; then
+      echo "ERROR running registrar tests!"
+      NODE_ERR_CODE=1
+   fi
    echo "END running registrar tests"
 }
 
@@ -167,6 +177,10 @@ runChainTests() {
    echo "BEGIN running chain-tests ..."
    preExample chaincode_example02 mycc1
    node $UNITTEST/chain-tests.js
+   if [ $? -ne 0 ]; then
+      echo "ERROR running chain-tests!"
+      NODE_ERR_CODE=1
+   fi
    postExample chaincode_example02
    echo "END running chain-tests"
 }
@@ -175,14 +189,22 @@ runAssetMgmtTests() {
    echo "BEGIN running asset-mgmt tests ..."
    preExample asset_management mycc2
    node $UNITTEST/asset-mgmt.js
+   if [ $? -ne 0 ]; then
+      echo "ERROR running asset-mgmt tests!"
+      NODE_ERR_CODE=1
+   fi
    postExample asset_management
    echo "END running asset-mgmt tests"
 }
 
 runAssetMgmtWithRolesTests() {
    echo "BEGIN running asset management with roles tests ..."
-   preExample asset_management_with_roles
+   preExample asset_management_with_roles mycc3
    node $UNITTEST/asset-mgmt-with-roles.js
+   if [ $? -ne 0 ]; then
+      echo "ERROR running asset management with roles tests!"
+      NODE_ERR_CODE=1
+   fi
    postExample asset_management_with_roles
    echo "END running asset management with roles tests"
 }
@@ -200,6 +222,7 @@ startProcess() {
       echo "$3 is started"
    else
       echo "ERROR: $3 failed to start; see $2"
+      NODE_ERR_CODE=1
       exit 1
    fi
 }
@@ -215,3 +238,8 @@ killProcess() {
 }
 
 main
+
+if [ "$NODE_ERR_CODE" != "0" ]; then
+  echo "ERROR: Error executing run-unit-tests.sh. Exiting with status code '1'."
+  exit 1
+fi

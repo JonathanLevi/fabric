@@ -88,25 +88,28 @@ func main() {
 	}
 
 	ca.LogInit(iotrace, ioinfo, iowarning, ioerror, iopanic)
+	// cache configure
+	ca.CacheConfiguration()
+
 	ca.Info.Println("CA Server (" + viper.GetString("server.version") + ")")
 
 	aca := ca.NewACA()
-	defer aca.Close()
+	defer aca.Stop()
 
 	eca := ca.NewECA()
-	defer eca.Close()
+	defer eca.Stop()
 
 	tca := ca.NewTCA(eca)
-	defer tca.Close()
+	defer tca.Stop()
 
 	tlsca := ca.NewTLSCA(eca)
-	defer tlsca.Close()
+	defer tlsca.Stop()
 
 	runtime.GOMAXPROCS(viper.GetInt("server.gomaxprocs"))
 
 	var opts []grpc.ServerOption
-	if viper.GetString("server.tls.certfile") != "" {
-		creds, err := credentials.NewServerTLSFromFile(viper.GetString("server.tls.certfile"), viper.GetString("server.tls.keyfile"))
+	if viper.GetString("server.tls.cert.file") != "" {
+		creds, err := credentials.NewServerTLSFromFile(viper.GetString("server.tls.cert.file"), viper.GetString("server.tls.key.file"))
 		if err != nil {
 			panic(err)
 		}

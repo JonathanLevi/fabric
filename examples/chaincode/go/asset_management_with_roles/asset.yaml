@@ -16,8 +16,10 @@ server:
 
         # TLS certificate and key file paths
         tls:
-#              certfile: "/var/hyperledger/production/.ca/tlsca.cert"
-#              keyfile: "/var/hyperledger/production/.ca/tlsca.priv"
+              cert:
+#                    file: "/var/hyperledger/production/.ca/tlsca.cert"
+              key:
+#                    file: "/var/hyperledger/production/.ca/tlsca.priv"
 
 security:
     # Can be 256 or 384
@@ -226,7 +228,7 @@ peer:
     validator:
         enabled: true
 
-        # Consensus plugin to use. The value is the name of the plugin, e.g. obcpbft, noops
+        # Consensus plugin to use. The value is the name of the plugin, e.g. pbft, noops
         # if the given value is not recognized, we will default to noops
         consensus: noops
 
