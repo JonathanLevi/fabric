@@ -21,10 +21,10 @@ func (t *TestParameters) String() string {
 }
 
 var testParametersSet = []*TestParameters{
-	&TestParameters{"SHA3", 256},
-	&TestParameters{"SHA3", 384},
-	&TestParameters{"SHA2", 256},
-	&TestParameters{"SHA2", 384}}
+	{"SHA3", 256},
+	{"SHA3", 384},
+	{"SHA2", 256},
+	{"SHA2", 384}}
 
 func TestMain(m *testing.M) {
 	for _, params := range testParametersSet {
