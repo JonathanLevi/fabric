@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/rand"
+	"math/big"
+	"reflect"
 	"testing"
 
 	"github.com/hyperledger/fabric/core/crypto/primitives"
@@ -444,4 +446,69 @@ func TestCBCEncryptCBCDecrypt(t *testing.T) {
 		t.Fatal("Encryption->Decryption with same key should result in original message")
 	}
 
+}
+
+func TestAESRelatedUtilFunctions(t *testing.T) {
+
+	key, err := primitives.GenAESKey()
+	if err != nil {
+		t.Fatalf("Failed generating AES key [%s]", err)
+	}
+
+	for i := 1; i < 100; i++ {
+		len, err := rand.Int(rand.Reader, big.NewInt(1024))
+		if err != nil {
+			t.Fatalf("Failed generating AES key [%s]", err)
+		}
+		msg, err := primitives.GetRandomBytes(int(len.Int64()) + 1)
+		if err != nil {
+			t.Fatalf("Failed generating AES key [%s]", err)
+		}
+
+		ct, err := primitives.CBCPKCS7Encrypt(key, msg)
+		if err != nil {
+			t.Fatalf("Failed encrypting [%s]", err)
+		}
+
+		msg2, err := primitives.CBCPKCS7Decrypt(key, ct)
+		if err != nil {
+			t.Fatalf("Failed decrypting [%s]", err)
+		}
+
+		if !reflect.DeepEqual(msg, msg2) {
+			t.Fatalf("Wrong decryption output [%x][%x]", msg, msg2)
+		}
+
+	}
+
+}
+
+func TestVariousAESKeyEncoding(t *testing.T) {
+	key, err := primitives.GenAESKey()
+	if err != nil {
+		t.Fatalf("Failed generating AES key [%s]", err)
+	}
+
+	// PEM format
+	pem := primitives.AEStoPEM(key)
+	keyFromPEM, err := primitives.PEMtoAES(pem, nil)
+	if err != nil {
+		t.Fatalf("Failed converting PEM to AES key [%s]", err)
+	}
+	if !reflect.DeepEqual(key, keyFromPEM) {
+		t.Fatalf("Failed converting PEM to AES key. Keys are different [%x][%x]", key, keyFromPEM)
+	}
+
+	// Encrypted PEM format
+	pem, err = primitives.AEStoEncryptedPEM(key, []byte("passwd"))
+	if err != nil {
+		t.Fatalf("Failed converting AES key to Encrypted PEM [%s]", err)
+	}
+	keyFromPEM, err = primitives.PEMtoAES(pem, []byte("passwd"))
+	if err != nil {
+		t.Fatalf("Failed converting encrypted PEM to AES key [%s]", err)
+	}
+	if !reflect.DeepEqual(key, keyFromPEM) {
+		t.Fatalf("Failed converting encrypted PEM to AES key. Keys are different [%x][%x]", key, keyFromPEM)
+	}
 }
